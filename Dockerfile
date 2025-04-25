@@ -1,11 +1,23 @@
-FROM python:3.11
+# Use an official Python runtime as a base image
+   FROM python:3.9-slim
 
-WORKDIR /app
-COPY . /app
+   # Create a virtual environment and non-root user
+   RUN python -m venv /opt/venv
+   ENV PATH="/opt/venv/bin:$PATH"
 
-RUN pip install --upgrade pip
-RUN pip install -r requirements.txt
+   # Create a non-root user and set permissions
+   RUN useradd -m appuser && chown -R appuser /opt/venv
+   USER appuser
 
-COPY . .
+   # Set the working directory
+   WORKDIR /app
 
-CMD ["python", "-m", "FileStream"]
+   # Copy requirements and install dependencies
+   COPY --chown=appuser:appuser requirements.txt .
+   RUN pip install --no-cache-dir -r requirements.txt
+
+   # Copy the rest of the app
+   COPY --chown=appuser:appuser . .
+
+   # Run the bot
+   CMD ["python3", "-m", "bot"]
